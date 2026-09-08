@@ -146,11 +146,12 @@ def _attach_pr_review_details(
 ) -> bool:
     """Attach bounded review details for one PR after the lightweight list scan.
 
-    Requesting nested commits and reviews across a 100-item ``gh pr list`` can
-    exceed GitHub's GraphQL node-complexity limit. ``gh pr view`` scopes those
-    nested connections to one PR and also supports ``statusCheckRollup``, so one
-    bounded detail call enriches all three scheduling/review surfaces. A failed
-    lookup leaves the lightweight row intact and marks the source scan incomplete.
+    Requesting review state, merge state, bodies, files, commits, and reviews
+    across a 100-item ``gh pr list`` can exceed GitHub's GraphQL complexity
+    limit. ``gh pr view`` scopes those fields to one PR and also supports
+    ``statusCheckRollup``, so one bounded detail call enriches the review
+    surfaces. A failed lookup leaves the lightweight row intact and marks the
+    source scan incomplete.
     """
 
     number = str(row.get("number") or "").strip()
@@ -163,7 +164,7 @@ def _attach_pr_review_details(
                 "view",
                 number,
                 "--json",
-                "createdAt,commits,reviews,statusCheckRollup",
+                "body,files,reviewDecision,mergeStateStatus,createdAt,commits,reviews,statusCheckRollup",
                 "--repo",
                 repository,
             ],
@@ -173,7 +174,16 @@ def _attach_pr_review_details(
         return False
     if not isinstance(details, dict):
         return False
-    required_keys = ("createdAt", "commits", "reviews", "statusCheckRollup")
+    required_keys = (
+        "body",
+        "files",
+        "reviewDecision",
+        "mergeStateStatus",
+        "createdAt",
+        "commits",
+        "reviews",
+        "statusCheckRollup",
+    )
     if any(key not in details for key in required_keys):
         return False
     for key in required_keys:
@@ -285,8 +295,6 @@ def scan_github_pull_requests(
         "url",
         "state",
         "isDraft",
-        "reviewDecision",
-        "mergeStateStatus",
         "headRefName",
         "headRefOid",
         "baseRefName",
@@ -296,8 +304,6 @@ def scan_github_pull_requests(
         "closedAt",
         "mergedAt",
         "mergeCommit",
-        "body",
-        "files",
         "changedFiles",
         "additions",
         "deletions",
