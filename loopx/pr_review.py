@@ -26,10 +26,6 @@ from .capabilities.pr_review_queue.github_source import (
     attach_pr_review_details as _attach_pr_review_details,
 )
 from .capabilities.pr_review_queue.github_source import run_gh_json as _run_gh_json
-from .capabilities.pr_review_queue.github_source import (
-    attach_pr_review_details as _attach_pr_review_details,
-)
-from .capabilities.pr_review_queue.github_source import run_gh_json as _run_gh_json
 from .control_plane.runtime.time import now_utc_iso
 from .presentation.markdown import as_dict as _as_dict
 from .presentation.markdown import as_list as _as_list
