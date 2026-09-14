@@ -7,6 +7,7 @@ from types import SimpleNamespace
 import loopx.cli_commands.pr_review as pr_review_cli_module
 import loopx.pr_review as pr_review_module
 import loopx.pr_review_merge_readiness as merge_readiness_module
+import loopx.capabilities.pr_review_queue.github_source as github_source_module
 import pytest
 from loopx.capabilities.machine_configuration.builtins import (
     build_builtin_machine_configuration_registry,
@@ -1345,7 +1346,9 @@ def test_github_transport_preserves_utf8_under_gbk_locale(monkeypatch):
 
     monkeypatch.setattr(subprocess, "_text_encoding", lambda: "gbk")
     monkeypatch.setattr(
-        pr_review_module, "subprocess", SimpleNamespace(run=child, PIPE=subprocess.PIPE)
+        github_source_module,
+        "subprocess",
+        SimpleNamespace(run=child, PIPE=subprocess.PIPE),
     )
     assert pr_review_module._run_gh_json(["pr", "view", "1"]) == payload
 
@@ -1366,7 +1369,9 @@ def test_github_transport_keeps_json_and_process_failures(monkeypatch):
 
     monkeypatch.setattr(subprocess, "_text_encoding", lambda: "gbk")
     monkeypatch.setattr(
-        pr_review_module, "subprocess", SimpleNamespace(run=child, PIPE=subprocess.PIPE)
+        github_source_module,
+        "subprocess",
+        SimpleNamespace(run=child, PIPE=subprocess.PIPE),
     )
     with pytest.raises(json.JSONDecodeError):
         pr_review_module._run_gh_json(["pr", "view", "1"])
@@ -1397,7 +1402,9 @@ def test_github_transport_replaces_malformed_utf8(monkeypatch):
         )
 
     monkeypatch.setattr(
-        pr_review_module, "subprocess", SimpleNamespace(run=child, PIPE=subprocess.PIPE)
+        github_source_module,
+        "subprocess",
+        SimpleNamespace(run=child, PIPE=subprocess.PIPE),
     )
     assert pr_review_module._run_gh_json(["pr", "view", "1"]) == {
         "title": "broken\ufffd"

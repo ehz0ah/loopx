@@ -27,6 +27,8 @@ def run_gh_json(args: list[str], *, cwd: Path | None = None) -> Any:
         cwd=cwd,
         check=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )
@@ -57,20 +59,27 @@ def _fetch_complete_pr_files(
         return None
     pages = payload if all(isinstance(page, list) for page in payload) else [payload]
     files: list[dict[str, Any]] = []
-    for page in pages:
-        for item in page:
-            if not isinstance(item, dict):
-                return None
-            path = str(item.get("filename") or item.get("path") or "").strip()
-            if not path:
-                return None
-            files.append(
-                {
-                    "path": path,
-                    "additions": int(item.get("additions") or 0),
-                    "deletions": int(item.get("deletions") or 0),
-                }
-            )
+    try:
+        for page in pages:
+            for item in page:
+                if not isinstance(item, dict):
+                    return None
+                path = str(item.get("filename") or item.get("path") or "").strip()
+                if not path:
+                    return None
+                additions = int(item.get("additions") or 0)
+                deletions = int(item.get("deletions") or 0)
+                if additions < 0 or deletions < 0:
+                    return None
+                files.append(
+                    {
+                        "path": path,
+                        "additions": additions,
+                        "deletions": deletions,
+                    }
+                )
+    except (TypeError, ValueError):
+        return None
     return files if len(files) == expected_count else None
 
 
